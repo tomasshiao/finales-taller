@@ -37,9 +37,17 @@ for (auto it = numeros.begin(); it != numeros.end(); it++) {
 
 > ¿Qué significa que una función sea **blocante**? ¿Cómo subsanaría esa limitación en términos de **mantener el programa 'vivo'**?
 
+Una función es bloqueante cuando detiene ejecición del hilo hasta que termine su tarea. Por ejemplo, la función pop de la cola provista por la cátedra es una función bloqueante, ya que espera a poder sacar un elemento de la cola, y si esta está vacía, se queda esperando a que haya algún elemento para poder quitar.
+
+Para subsanar esta limitación, se pueden lanzar múltiples hilos (multithreading) o procesos (fork).
+
 ---
 
-> ¿Qué significa la palabra **virtual** antepuesta a un método de una clase? ¿Qué cambios genbera a nivel **compilación** y al momento de **ejecución**?
+> ¿Qué significa la palabra **virtual** antepuesta a un método de una clase? ¿Qué cambios genera a nivel **compilación** y al momento de **ejecución**?
+
+La palabra `virtual` antepuesta a un método de clase significa que este método puede ser redefinido o sobreescrito en clases derivadas; es fundamental para el uso del polimorfismo ya que permite que distintos objetos sean tratados como un tipo común (la case base).
+
+En compilación, el compilador genera una tabla virtual para cada clase que tiene punteros a las funciones virtuales de esa clase y la clase base. En tiempo de ejecución, se usa esta tabla para determinar cuál es la implementación correcta que se va a usar. El enlace de la función se determina en tiempo de ejecución (**late binding**). Es gracias a esto que se puede usar polimorfismo.
 
 ---
 
@@ -89,6 +97,27 @@ int suma(const int a, const int b) {
 > - Explique al menos una estrategia para **evitar que una clase particular sea copiable**
 > - Indique qué **diferencia** existe entre un constructor de **copia** y uno **move**.
 
+Un constructor por copia es aquel que copia miembro por miembro, manteniendo al original sin cambios y generando un segundo elemento idéntico al primero. Sirve para realizar copias, pasar por valor y para la inicialización de objetos, aunque es más ineficiente que el constructor por movimiento.
+
+Si no es definido por el desarrrollador, el compilador genera uno por defecto, aunque puede no tener el comportamiento deseado.
+
+Para evitar que una clase particular sea copiable hay dos maneras: declarar al constructor por copia como privado, o bien usando la keyword
+
+```cpp
+class Objeto1 {
+ private:
+    Objeto1(const Objeto1&);
+};
+
+class Objeto2 {
+ public:
+    Objeto2(const Objeto2&) = delete;
+    Objeto2& operator=(const Objeto2&) = delete;
+};
+```
+
+A diferencia del constructor por movimiento, el constructor por copia es más ineficiente ya que ocupa más memoria copiando miembro a miembro en lugar de utilizar el mismo objeto original cambiando su propietario; si se desea dejar el objeto original intacto, el constructor por copia es más conveniente.
+
 ---
 
 > ¿Qué diferencia existe entre un **constructor por copia** y uno por **movimiento**? **Ejemplifique**.
@@ -115,6 +144,19 @@ Si en el ejemplo anterior se invocaba por movimiento antes que por copia, en la 
 ---
 
 > Explique qué es y para qué sirve una **variable de clase** (o atributo estático) en C++. Mediante un ejemplo de uso, indique cómo se define dicha variable, su inicialización y el acceso a su valor para realizar una impresión simple dentro de un **main**.
+
+Las variables de clase son los atributos estáticos, que pertenecen a la clase en sí y no a una instancia de la clase misma. Sirven para guardar datos compartidos, asociar variables globales y almacenar constantes.
+
+```cpp
+class Printer {
+    static std::string msgPorDefecto = "Hola";
+};
+
+int main() {
+    std::cout << Printer::msgPorDefecto << std::endl;
+    return 0;
+}
+```
 
 ---
 
