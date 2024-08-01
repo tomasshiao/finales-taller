@@ -35,18 +35,6 @@ for (auto it = numeros.begin(); it != numeros.end(); it++) {
 
 ---
 
-> Explicar constructor move. Ejemplificar.
-
----
-
-> ¿Qué es un **functor**? ¿Qué ventaja ofrece frente a una función convencional? **Ejemplifique**.
-
----
-
-> ¿En qué consiste el patrón de diseño **RAII**? Ejemplifique.
-
----
-
 > ¿Qué significa que una función sea **blocante**? ¿Cómo subsanaría esa limitación en términos de **mantener el programa 'vivo'**?
 
 ---
@@ -105,13 +93,28 @@ int suma(const int a, const int b) {
 
 > ¿Qué diferencia existe entre un **constructor por copia** y uno por **movimiento**? **Ejemplifique**.
 
+En un constructor por copia, se crea una copia exacta del objeto, resultando en 2 objetos idénticos en memoria. El objeto original no se modifica.
+En un constructor por movimiento, el objeto original es transferido hacia el objeto construido, transfiriéndose su propiedad. En memoria, queda el mismo objeto solo que con distinto propietario.
+
+```cpp
+void printeameEsto(std::string str) {
+    std::cout << str << std::endl;
+}
+
+std::string msg = "Hola";
+
+// Acá se invoca por copia
+printeameEsto(msg);
+
+// Acá se invoca por movimiento
+printeameEsto(std::move(msg));
+```
+
+Si en el ejemplo anterior se invocaba por movimiento antes que por copia, en la invocación por copia se estaría pasando un objeto ya movido, por lo que no funcionaría.
+
 ---
 
 > Explique qué es y para qué sirve una **variable de clase** (o atributo estático) en C++. Mediante un ejemplo de uso, indique cómo se define dicha variable, su inicialización y el acceso a su valor para realizar una impresión simple dentro de un **main**.
-
----
-
-> Explique qué es y para qué sirve un **constructor MOVE** en C++. Indique cómo se comporta el sistema si éste **no es definido por el desarrollador**.
 
 ---
 
@@ -124,6 +127,86 @@ Significa que el valor de sus atributos **no** puede **ni debe** cambiar, por lo
 > ¿Qué significa `this` en C++? ¿Dónde se usa explícita o implícitamente?
 
 Es un puntero que mantiene la dirección de memoria del objeto actual, es decir, aquel usado para llamar al método. Se usa explícitamente para diferenciar ambigüedades cuando aparecen variables o parámetros con el mismo nombre que algún atributo de la clase o para retornar una referencia al mismo; implícitamente, al usar atributos del objeto.
+
+---
+
+> Explicar constructor move. Ejemplificar.
+> Explique qué es y para qué sirve un **constructor MOVE** en C++. Indique cómo se comporta el sistema si éste **no es definido por el desarrollador**.
+
+El constructor move es un constructor que a diferencia de aquel por copia, este mueve el objeto entero, cambiando el ownership del mismo a la clase construida. Es útil cuando se tienen objetos grandes para evitar copias en memoria, o cuando hay recursos como punteros a memoria dinámica.
+Este tipo de constructor es eficiente ya que evita copias innecesarias y además previene leaks de memoria al transferir el ownership del objeto.
+
+```cpp
+class UnaClase {
+ public:
+    UnaClase(UnaClase&& otraClase) {
+        // Lógica de construcción.
+    }
+};
+```
+
+El parámetro con el doble ampersand (`&&`) indica que debe utilizarse move semantics al pasar valores usando este constructor.
+
+Si hay un constructor por copia, el compilador no genera un constructor por movimiento por defecto; si no hay un constructor por copia, se generará un constructor move implícitamente que hace una copia miemmbro a miembro, lo que es menos eficiente que uno definido a mano.
+
+---
+
+> ¿Qué es un **functor**? ¿Qué ventaja ofrece frente a una función convencional? **Ejemplifique**.
+
+Un functor, u objeto función, es un objeto de una clase que sobrecarga el operador `()` y puede ser invocado como si fuera una función pasándole parámetros y retornando un resultado.
+
+Ventajas:
+
+1. Pueden tener estado: almacenan datos y modifican su comportamiento en función a estos.
+2. Pueden ser asignados a variables, o bien pasados como argumentos.
+3. Se pueden personalizar y acoplar a los datos.
+
+```cpp
+class OrdenarPorModulo {
+public:
+    bool operator()(int a, int b) {
+        return abs(a) < abs(b);
+    }
+};
+
+int main() {
+    std::vector<int> numeros = {3, -2, 5, -1, 4};
+    OrdenarPorModulo ordenar;
+    std::sort(numeros.begin(), numeros.end(), ordenar);
+
+    for (int num : numeros) {
+        std::cout << num << " ";
+    }
+    std::cout << std::endl;
+}
+```
+
+En el ejemplo, OrdenarPorModulo es un functor y se usa en la función sort.
+
+---
+
+> ¿En qué consiste el patrón de diseño **RAII**? Ejemplifique.
+
+El patrón de diseño RAII, Resource Acquisition Is Initialization, vincula la vida de los recursos a la del objeto: **cuando un objeto es creado adquiere el recurso; cuando se destruye el objeto, el recurso es liberado**. Esto ayuda a prevenir leaks de memoria.
+
+```cpp
+class GameController {
+private:
+    Serializer& serializer;
+    Deserializer& deserializer;
+    std::shared_ptr<Queue<std::unique_ptr<DTO>>>& gameQueue;
+
+public:
+    GameController(Serializer& serializer, Deserializer& deserializer,
+                   std::shared_ptr<Queue<std::unique_ptr<DTO>>>& gameQueue);
+};
+
+GameController::GameController(Serializer& serializer, Deserializer& deserializer,
+                               std::shared_ptr<Queue<std::unique_ptr<DTO>>>& gameQueue):
+        serializer(serializer), deserializer(deserializer), gameQueue(gameQueue) {}
+```
+
+En el ejemplo anterior, al crear el constructor de GameController, este objeto adquiere las referencias a Serializer, Deserializer y al puntero compartido gameQueue.
 
 ---
 
@@ -531,6 +614,10 @@ La función `pthread_join` espera a que el hilo se detenga antes de realizar alg
 
 Las clases de sincronización se usan cuando se debe controlar el acceso a un recurso para garantizar la integridad del mismo. Las clases de acceso dee sincronización se usan para acceder a estos recursos controlados. El multithreadding permite a la CPU procesar varias tareas simultáneamente.
 **Es perjudicial si sólo se tiene un núcleo de CPU sin bloqueo/espera en ningún subproceso**. Necesariamente hay una pérdida de tiempo de CPU para coordinar subprocesos múltiples. Dado que solo se puede ejecutar un subproceso, aunque todos podrían hacerlo (y por eso la condición de no bloqueo/no espera), el tiempo total es mayor.
+
+---
+
+> ¿Cuál es la diferencia entre un hilo y un proceso?
 
 ---
 
