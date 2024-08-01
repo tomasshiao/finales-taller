@@ -290,6 +290,16 @@ C++ ofrece la posibilidad de compilación condicional mediante la inclusión de 
 
 > **¿Qué características debe tener un compilador C para que sea considerado "portable"?**
 
+Un compilador es portable si es capaz de generar código ejecutable para diferentes plataformas y sistemas operativos, minimizanod los cambios necesarios en el código fuente.
+
+1. Adherencia estricta a estándares: ANSI C y extensiones específicas.
+2. Gestión de diferencias entre plataformas: syscalls, tipos de datos, endianness.
+3. Biblioteca estándar.
+4. Opciones de compilación.
+5. Documentación.
+
+Ejemplos de compiladores portables: GCC, CLang.
+
 ---
 
 > Explique **qué es** cada uno de los siguientes, haciendo referencia a su **inicialización**, su **comportamiento** y el **área de memoria** donde residen:
@@ -297,6 +307,20 @@ C++ ofrece la posibilidad de compilación condicional mediante la inclusión de 
 > - Una variable **global static**.
 > - Una variable **local static**.
 > - Un **atributo de clase static**.
+
+Una variable global estática es una variable declarada fuera de cualquier función y tiene alcance de todo el programa. Al ser declarada static, mantiene su valor entre distintas llamadas a funciones.
+Se inicializa explícitamente, o bien con 0 para tipos numéricos y null para punteros.
+Tiene duración hasta el fin del programa y es accesible desde cualquier parte del código. Tiene enlace externo, puede ser referenciada desde otros archivos.
+Vive en el Data Segment.
+
+Una variable local static es una variable declarada dentro de una función, su alcance está dentro de esta misma, pero como es static, dura durante la ejecución del programa y no se destruye al terminar de ejecutar la función.
+Se inicializa explícitamente o implícitamente (0 para tipos numéricos y null para punteros).
+Dura hasta el final del programa y es accesible solo dentro de la función que lo declara. Tiene enlace interno, es visible dentro del archivo donde está definido.
+Vive en el Data Segment.
+
+Un atributo de clase estático es una variable miembro de una clase que pertenece a la clase y no a la instancia. Todas las instancias comparten esa misma copia de la variable.
+Se inicializa fuera de la clase en el .cpp, dura durante toda la ejecución del programa y es accesible desde cualquier lado del código usando el nombre de la clase.
+Vive en el Data Segment.
 
 ---
 
