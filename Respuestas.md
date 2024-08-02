@@ -404,7 +404,7 @@ En el código de ejemplo, DEBUG es verdadero puesto que está definido en 1, mie
 
 > Describa con exactitud cada uno de los siguientes:
 >
-> - **`statuc int A=7;`**
+> - **`static int A=7;`**
 > - **`extern char *(*B)[7];`**
 > - **`float **C;`**
 
@@ -458,6 +458,8 @@ El *code bloat* se produce cuando un Template termina siendo muy grande y tenien
 
 [^1]: <https://refactoring.guru/refactoring/smells/bloaters>
 
+Esto hace que la clase pierda eficiencia y sea difícil de mantener.
+
 En este fragmento, se tiene una clase que realiza demasiadas acciones, pudiéndose modularizar.
 
 ```cpp
@@ -498,17 +500,70 @@ private:
 };
 ```
 
+Algunas maneras de evitarlo son el uso de la especialización, composición, interfaces o clases abstractas.
+
+El fragmento anterior se puede mejorar:
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+template <typename T>
+class DataContainer {
+public:
+    void add(const T& data) {
+        data_.push_back(data);
+    }
+
+    const std::vector<T>& getData() const {
+        return data_;
+    }
+
+private:
+    std::vector<T> data_;
+};
+
+template <typename T>
+class DataProcessor {
+public:
+    void print(const DataContainer<T>& container) const {
+        for (const auto& item : container.getData()) {
+            std::cout << item << std::endl;
+        }
+    }
+
+    T findMax(const DataContainer<T>& container) const {
+        return *std::max_element(container.getData().begin(), container.getData().end());
+    }
+
+    // Otras operaciones
+};
+```
+
+En la versión mejorada, el contenedor de datos se encarga de agregar datos y retornar los datos correspondientes; mientras que el procesador se encarga de realizar las operaciones de procesamiento.
+
 ---
 
 > Explique qué son **los métodos virtuales** y para qué sirven. Dé un breve ejemplo donde su uso sea imprescindible.
+
+Que un método sea virtual quiere decir que este puede variar su comportamiento según el tipo real del objeto aunque esté siendo accedido desde una clase base. Sirve especialmente para el polimorfismo donde los métodos que se indican virtuales serán aquellos que una clase que herede de aquella clase base podrá sobreescribir.
+
+Un caso en donde es imprescindible el uso de métodos virtuales es en el destructor de una clase polimórfica: si no es virtual, al destruir una clase hija primero accede al destructor de la clase padre y destruirá la clase, y no ejecutará el destructor de la clase hija. Esto puede hacer que las partes no comunes entre los dos objetos no se destruyan, ocacionando un leak de memoria.
 
 ---
 
 > Explique qué son **los métodos virtuales puros** y para qué sirven. Dé un breve ejemplo donde su uso sea **imprescindible**.
 
+Un método virtual puro es un método que no tiene implementación en dicha clase. Es una promesa de que las clases derivadas implementarán dicho método.
+
+Su uso es imprescindible, por ejemplo, en las clases abstractas, donde se debe declarar un método virtual puro para que no pueda ser instanciada.
+
 ---
 
 > ¿Por qué las librerías que usan **Templates** se publican con todo el código fuente y no como un .h y .o/.obj?
+
+Porque los templates dependen de un tipo de dato genérico y son instanciados en tiempo de compilación, debiéndose saber en dicho momento cuál es el tipo que se va a usar, ya que esto depende del contexto en el que es usado.
 
 ---
 
@@ -519,6 +574,28 @@ Los template deben poseer la definición en el mismo .h porque el compilador los
 ---
 
 > ¿Qué es el **polimorfismo**? Ejemplifique mediante código.
+
+El polimorfismo es la capacidad de que un objeto se comporte de distintas formas según el contexto en el que se use.
+Permite que el código sea flexible y además facilita la creación de jerarquía de clases y, bien implementado, simplifica el mantenimiento del código.
+
+```cpp
+class DTO {
+ public:
+    int type;
+    virtual int getType();
+    virtual ~DTO();
+};
+
+class UnDTOEspecifico : public DTO {
+ public:
+    int getType() override { return 0; }
+};
+
+class OtroDTOEspecifico : public DTO {
+ public:
+    int getType() override { return 1; }
+};
+```
 
 ---
 
@@ -540,9 +617,14 @@ El destructor debe ser virtual. El objeto, si bien será una instancia de la cla
 > }
 > ```
 
+El código intenta asignarle un entero a un puntero, por lo que tiene un comportamiento indefinido: la dirección de memoria 1000 puede ser (y probablemente sea) inválida. Lo que imprime dependerá de qué suceda aquí pero probablemente dé un error de compilación. Si imprime algo, será aleatorio o puede incluso no imprimir nada.
+
 ---
 
 > Considere la estructura `struct ejemplo {int a; char b;}`. ¿Es verdad que **sizeof(ejemplo) = sizeof(a) + sizeof(b)**? **Justifique**.
+
+No es necesariamente cierto que se dé dicha equidad. Esto se debe a que en muchos casos, dependiendo de la arquitectura, se agrega padding para alinear la memoria a múltiplos de un tamaño en específico, y de esta manera poder acceder a los elementos de la estructura sumando dicho valor, representando una mejora en el rendimiento permitiendo una mayor velocidad de acceso.
+Si fuera el caso que se le introduce padding a la estructura ejemplo, y teniendo en cuenta que un int ocupa 4 bytes, y un char, 1, sizeof(ejemplo) daría 8 bytes, pues serían los 4 del int a, aquel del char b y 3 más de padding para alinear b.
 
 ---
 
@@ -573,9 +655,23 @@ El destructor debe ser virtual. El objeto, si bien será una instancia de la cla
 > }
 > ```
 
+Salida del programa:
+
+```sh
+B()
+A()
+~A()
+~B()
+```
+
+B es una clase que hereda de A, por lo que cuando se instancia, el constructor primero imprime "B()" y luego se llama al constructor de A, imprimiéndose "A()". Luego, cuando se termina la ejecución, se destruye el objeto instanciado. Al ser B una clase que hereda de A, se llama primero al destructor de A, que imprime "~A()" y luego al destructor de B, que imprime "~B()".
+
 ---
 
 > ¿Qué valor arroja **sizeof(int)**? **Justifique**.
+
+Depende de la arquitectura del computador. Si tiene una arquitectura de 32 bits, por lo general el tamaño de int es de 4 bytes; si es de 64 bits, entonces puede ser de 4 u 8 bytes.
+También depende del compilador, que puede asignar un tamaño mayor debido a ciertas optimizaciones que puede tener.
 
 ---
 
@@ -590,11 +686,23 @@ El destructor debe ser virtual. El objeto, si bien será una instancia de la cla
 > }
 > ```
 
+- (a) es una variable global estática, vive en el data segment y se inicializa automáticamente con valor 0 al inicio del programa. Permanece en memoria hasta el final de ejecición y es accesible desde cualquier parte del código.
+
+- (b) es una función que retorna un entero. No se inicializa, puesto que es una función. Se ejecuta cuando es llamada y devuelve el valor de c+d como entero. Vive en el code segment.
+
+- (c) es una variable local estática, vive en el data segment y se inicializa automáticamente con valor 0 la primera vez que se ejecuta la función (b). Permanece en memoria desde que es inicializada hasta el final de ejecución del programa, ya que al ser estática no se destruye al final de la ejecución de (b).
+
+- (d) es una variable local de la función (b) inicializada explícitamente con el valor 65. Existe dentro de (b), es accesible solamente dentro de esta función, y cuando esta finaliza ejecución, es destruida. Vive en el stack.
+
 ---
 
 ## Programación Orientada a Eventos
 
 > **Describa** el concepto de **loop de eventos (events loop)** utilizando en programación orientada a eventos y, en particular, en entornos de interfaz gráfica (GUIs).
+
+Un loop de eventos en programación orientada a eventos es aquel hilo o proceso que se encarga de detectar los eventos que suceden para poder procesarlos inmediatamente.
+Consiste en su inicialización, donde se crea una cola que recibirá los eventos a procesar; luego espera a que la cola se llene con algo, y cuando se pushea algún evento, el loop se encarga de poppearlo y procesarlo. Una vez procesado, se vuelve a la etapa de espera donde aguarda por la llegada de un nuevo evento.
+Los eventos pueden ser clicks, apretar alguna tecla, etc. Este loop es responsivo, ya que procesa cada comando apenas llega -el pop de la cola es bloqueante- y por ende también eficiente, ya que al ejecutarse en varios hilos/procesos (siempre y cuando se haga de esta forma y la computadora lo permita) permite la optimización y el mejor manejo de los recursos usando una estructura clara y organizada.
 
 ---
 
@@ -602,17 +710,66 @@ El destructor debe ser virtual. El objeto, si bien será una instancia de la cla
 
 > ¿Qué es la critical section? Ejemplificar cómo protegerla.
 
+En programación concurrente, una critical section es un bloque de código que accede a recursos compartidos y que se debe ejecutar de a un hilo por vez. Esto se debe a que si múltiples hilos accedieran en simultáneo se producirían race conditions, resultando en la obtención de resultados inesperados o incluso corrupción de datos.
+
+Se puede proteger con el uso de mutex, ya que este restringe el acceso a un hilo y otro hilo podrá acceder a esta sección recién cuando el hilo que estuvo accediendo libere el mutex.
+
+```cpp
+#include <mutex>
+
+int contador = 0;
+std::mutex mtx;
+void sumarUno() {
+    std::lock_guard<std::mutex> lock(mtx);
+    contador++;
+}
+```
+
 ---
 
 > ¿Qué función se usa para lanzar un hilo? Ejemplificar.
+
+En C++, para lanzar un hilo, se usa el operador `()`. Al instanciar un hilo de la librería estándar, se debe pasar el nombre del proceso que debe ejecutar el hilo:
+
+```cpp
+void printeaAlgo() {
+    std::cout << "Algo" << std::endl;
+}
+
+int main() {
+    std::thread hilo1(printeaAlgo);
+    std::thread hilo2(printeaAlgo);
+    printeaAlgo();
+    hilo1.join();
+    hilo2.join();
+    return 0;
+}
+```
 
 ---
 
 > ¿Cómo se logra que 2 **threads** accedan (lectura/escritura) a un mismo recurso compartido sin que se generen problemas de consistencia? **Ejemplifique**.
 
+Para que 2 threads accedan a un mismo recurso compartido sin que se generen problemas de consistencia se debe proteger a la sección crítica, el bloque de código en el que se accede al recurso compartido, a través del uso de un mutex.
+
+```cpp
+#include <mutex>
+
+int contador = 0;
+std::mutex mtx;
+void sumarUno() {
+    std::lock_guard<std::mutex> lock(mtx);
+    contador++;
+}
+```
+
+Otra opción es usar variables atómicas, como por ejemplo `std::atomic<bool>`, usado en los trabajos prácticos propuestos por el curso para actualizar si se cerró el socket o no.
+
 ---
 
 > ¿Qué ventaja ofrece un **lock raii** frente al tradicional **lock/unlock**?
+
+Un lock RAII es mucho más fácil de usar, ya que el manejo de excepciones está incluido y además evita fugas. También evita que se generen deadlocks: con un lock RAII el mutex se libera cuando finaliza el scope del mismo, mientras que si no se realiza un unlock, fácilmente olvidable, en el método tradicional se quedaría estancado porque nunca se libera el mutex.
 
 ---
 
@@ -642,11 +799,17 @@ int main() {
 
 > ¿Qué es un **Deadlock**? **Ejemplifique**.
 
+Un deadlock es una situación en donde múltiples hilos se encuentran bloqueados porque están esperando la liberación de algún recurso que otro de los hilos bloqueados tiene, por lo que ninguno continúa su ejecución.
+
+Se puede dar en una situación donde el hilo 1 accede al recurso A y luego intenta acceder al recurso B, sin liberar el mutex aún, mientras que un hilo 2 accedió al recurso B y tiene el mutex, y quiere acceder al recurso A. Este es un caso en donde los recursos no están asignados adecuadamente.
+
+Los deadlocks se previenen usando una asignación de recursos adecuada y con mutex para evitar accesos concurrentes a las secciones críticas.
+
 ---
 
 > Explique el propísito y uso de la función `BIND`.
 
-Fue pensada para asignarle un socket abierto a una dirección. El uso de la función es previo al de la función `accept` ya que la misma prepara al socket para poder escuchar conexiones. `bind` establece a qué interfaz, IP y puerto se quiere asociar al socket. La dirección usada en la función `bind` son el resultado de la función `getaddrinfo`.
+La función `BIND` es una syscall que permite establecer una conexión entre un socket y una dirección IP a través de un puerto. En sockets, el uso de la función es previo al de la función `accept` ya que la misma prepara al socket para poder escuchar conexiones. `bind` establece a qué interfaz, IP y puerto se quiere asociar al socket. La dirección usada en la función `bind` son el resultado de la función `getaddrinfo`.
 
 ---
 
@@ -667,6 +830,7 @@ Luego de hacer bind e iniciar el socket con listen para escuchar conexiones, la 
 
 El listen define cuántas conexiones en espera pueden esperar hasta ser aceptadas. No limita cuántas conexiones totales puede haber.
 Indica que el servidor está listo para recibir peticiones marcando el socket como pasivo.
+Los parámetros que lleva son el socket y cuántas conexiones como máximo todavía puede aceptar (el backlog).
 
 ---
 
@@ -684,6 +848,10 @@ Las clases de sincronización se usan cuando se debe controlar el acceso a un re
 ---
 
 > ¿Cuál es la diferencia entre un hilo y un proceso?
+
+Un hilo es una unidad de ejecución dentro de un proceso, mientras que un proceso es un programa en sí.
+El proceso tiene recursos del sistema y espacio de direcciones propio y es independiente de otros procesos, mientras que los hilos comparten recursos y espacio de direcciones y son interdependientes unos a otros.
+Los hilos se usan cuando se pueden ejecutar concurrentemente múltiples tareas, mientras que los procesos son para cuando se desea aislar la tarea.
 
 ---
 
@@ -864,6 +1032,168 @@ std::list<T> Suprimir(std::list<T> a, std::list<T> b);
 
 > Escriba una rutina que dibuje las dos diagonales de la pantalla en color rojo.
 
+Con QT:
+
+```cpp
+#include <QApplication>
+#include <QWidget>
+#include <QPainter>
+
+class DiagonalWindow : public QWidget {
+public:
+    DiagonalWindow(QWidget *parent = nullptr) : QWidget(parent) {}
+
+protected:
+    void paintEvent(QPaintEvent *event) override {
+        QPainter painter(this);
+        painter.setPen(Qt::red);
+
+        // Obtenemos las dimensiones de la ventana
+        int width = this->width();
+        int height = this->height();
+
+        // Dibujamos las diagonales
+        painter.drawLine(0, 0, width, height); // Diagonal superior izquierda a inferior derecha
+        painter.drawLine(width, 0, 0, height); // Diagonal superior derecha a inferior izquierda
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    DiagonalWindow window;
+    window.show();
+    return app.exec();
+}
+```
+
+Con SDL:
+
+```cpp
+#include <SDL2/SDL.h>
+
+int main(int argc, char* argv[]) {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        // Manejar errores
+        return -1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("Diagonales Rojas", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Rojo
+
+    // Obtener las dimensiones de la ventana
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+
+    // Dibujar las diagonales
+    SDL_RenderDrawLine(renderer, 0, 0, width, height);
+    SDL_RenderDrawLine(renderer, width, 0, 0, height);
+
+    SDL_RenderPresent(renderer);
+
+    // Bucle principal (simplificado)
+    SDL_Event event;
+    while (true) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                goto out;
+            }
+        }
+        SDL_Delay(16);
+    }
+out:
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 0;
+}
+```
+
 ---
 
 > **Escriba una rutina** (para ambiente gráfico Windows o Linux) que dibuje un **triángulo amarillo** del tamaño de la ventana.
+
+Con QT:
+
+```cpp
+#include <QApplication>
+#include <QWidget>
+#include <QPainter>
+
+class TrianguloAmarillo : public QWidget {
+public:
+    TrianguloAmarillo(QWidget *parent = nullptr) : QWidget(parent) {}
+
+protected:
+    void paintEvent(QPaintEvent *event) override {
+        QPainter painter(this);
+        painter.setBrush(Qt::yellow);
+
+        // Obtenemos las dimensiones de la ventana
+        int width = this->width();
+        int height = this->height();
+
+        // Calculamos los vértices del triángulo (ajusta según tus necesidades)
+        QPointF points[3] = {
+            QPointF(0, height),
+            QPointF(width, height),
+            QPointF(width / 2, 0)
+        };
+
+        painter.drawPolygon(points, 3);
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    TrianguloAmarillo window;
+    window.show();
+    return app.exec();
+}
+```
+
+Con SDL:
+
+```cpp
+#include <SDL2/SDL.h>
+
+int main(int argc, char* argv[]) {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        // Manejar errores
+        return -1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("Triángulo Amarillo", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Amarillo
+    SDL_RenderClear(renderer);
+
+    // Dibujar el triángulo (ajusta los puntos según tus necesidades)
+    SDL_Vertex vertices[] = {
+        {100, 400, {255, 255, 0, 255}},
+        {540, 400, {255, 255, 0, 255}},
+        {320, 100, {255, 255, 0, 255}}
+    };
+    SDL_RenderGeometry(renderer, NULL, vertices, 3);
+
+    SDL_RenderPresent(renderer);
+
+    // Bucle principal (simplificado)
+    SDL_Event event;
+    while (true) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                goto out;
+            }
+        }
+        SDL_Delay(16);
+    }
+out:
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 0;
+}
+```
