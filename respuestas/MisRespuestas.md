@@ -883,6 +883,63 @@ Los hilos se usan cuando se pueden ejecutar concurrentemente múltiples tareas, 
 
 ---
 
+#### Ejemplo Inicalización Socket
+
+```c
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        // Normalmente recibe puerto e ip.
+        return -1;
+    }
+
+    // Procesar parámetros
+    char* port = argv[1];
+    int ip = atoi(argv[2]);
+
+    // Crear Socket
+    int skt_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (skt_fd < 0) {
+        perror("Error en creación del socket");
+        return -1;
+    }
+
+    // Configurar la dirección del servidor
+    struct sockaddr_in address;
+    memset(&address, 0, sizeof(address));
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(argv[2]);
+    address.sin_port = htons(atoi(argv[1]));
+
+    // Asociar el socket a la dirección y puerto
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Escuchar conexiones
+    if (listen(server_fd, 1) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    // Aceptar una conexión
+    int new_socket;
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&address))<0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    // Procesar los paquetes.
+
+    // Cerrar el socket
+    close(new_socket);
+    shutdown(server_fd, SHUT_RDWR);
+    return 0;
+}
+```
+
+---
+
 ### Estructuras de Datos - Operadores
 
 > Declarar una clase que contenga: atributos, accesibilidad, operadores +, ++, --, float, <<, >> y constructor move.
@@ -918,6 +975,59 @@ Los hilos se usan cuando se pueden ejecutar concurrentemente múltiples tareas, 
 ---
 
 > **Declare** la clase IPv4 para almacenar una dirección IP. Incluya **constructor default, constructor move, constructor de copia**, y los siguientes operadores: **operator<<, operator==, operator= y operator+**.
+
+---
+
+#### Ejemplo Declaración Operadores de una Clase Genérica
+
+```cpp
+template <typename T>
+class GenericClass {
+public:
+    // Operadores aritméticos binarios
+    GenericClass operator+(const GenericClass& other) const;
+    GenericClass operator-(const GenericClass& other) const;
+    GenericClass operator*(const GenericClass& other) const;
+    GenericClass operator/(const GenericClass& other) const;
+
+    // Operadores de comparación
+    bool operator==(const GenericClass& other) const;
+    bool operator!=(const GenericClass& other) const;
+    bool operator<(const GenericClass& other) const;
+    bool operator>(const GenericClass& other) const;
+    bool operator<=(const GenericClass& other) const;
+    bool operator>=(const GenericClass& other) const;
+
+    // Operadores lógicos bit a bit
+    GenericClass operator&(const GenericClass& other) const;
+    GenericClass operator|(const GenericClass& other) const;
+    GenericClass operator^(const GenericClass& other) const;
+    GenericClass operator~() const; // Complemento a uno
+
+    // Operadores lógicos booleanos
+    bool operator&&(const GenericClass& other) const;
+    bool operator||(const GenericClass& other) const;
+
+    // Operadores de asignación
+    GenericClass& operator=(const GenericClass& other);
+    GenericClass& operator+=(const GenericClass& other);
+    GenericClass& operator-=(const GenericClass& other);
+    // ... y otros operadores de asignación compuestos
+
+    // Operadores de desplazamiento a izquierda y derecha
+    GenericClass operator<<(int shift) const;
+    GenericClass operator>>(int shift) const;
+
+    // Operadores de incremento y decremento
+    GenericClass& operator++(); // Preincremento
+    GenericClass operator++(int); // Postincremento
+    GenericClass& operator--(); // Predecremento
+    GenericClass operator--(int); // Postdecremento
+
+    // Cast a int
+    explicit operator int() const;
+};
+```
 
 ---
 
@@ -964,6 +1074,75 @@ Los hilos se usan cuando se pueden ejecutar concurrentemente múltiples tareas, 
 ---
 
 > Escribir **programa ISO C** que procese el archivo de **texto cuyo nombre es recibido como parámetro**. El procesamiento consiste en **leer oraciones y suprimir aquellas que tengan más de 3 palabras**. Asuma que el archivo no puede cargarse en memoria, pero una oración sí puede.
+
+---
+
+#### Ejemplo funciones cambio de base
+
+```c
+// Base N, Múltiplos de X y números de S símbolos, asumiendo que son little endian
+#define BASE N
+#define MULTIPLO_DE X
+#define CANT_SIMBOLOS S
+int baseN_to_int(const char* num) {
+    int res = 0;
+    int base = 1;
+    for (int i=(CANT_SIMBOLOS - 1); i >= 0; i--) {
+        char digito = num[i];
+        bool mayor_que_diez = (digito >= 'A');
+        res += ((mator_que_diez) ? (digito - 'A' + 10) : (digito - '0')) * base;
+        base *= BASE;
+    }
+    return res;
+}
+
+int int_to_baseN(const char* num) {
+    int res = 0;
+    for (int i = (CANT_SIMBOLOS - 1); i >= 0; i--) {
+        int digito;
+        if (num[i] >= '0' && num[i] <= '9') {
+            digito = num[i] - '0';
+        } else if (num[i] >= 'A' && num[i] <= MAX_BASE) {
+            // MAX_BASE es la letra máxima que puede tener la base.
+            // Ej.: 11 => A | 16 => F |  20 => J | 25 => O | 27 => Q | 32 => V | 36 => Z
+            digito = num[i] - 'A' + 10;
+        } else {
+            // No sé cómo se hace.
+            return -1;
+        }
+    }
+}
+```
+
+#### Ejemplo abrir un archivo, buscar posición y escribir
+
+```c
+int main(int argc, char* argv[]) {
+    FILE *archivo;
+    char name[] = "nombre_archivo.bin/dat"; // bin o dat porque uso r+b
+    archivo = fopen(name, "r+b");
+    if (archivo == NULL) return -1;
+
+    // Leer X bytes:
+    char var[X+1]; // Lo leído + '\0'
+    fread(var, sizeof(char), X, archivo); // devuelve la cantidad de bytes leídos.
+    // Moverse Y bytes desde el inicio del archivo
+    fseek(archivo, Y, SEEK_SET);
+    // Moverse P bytes hacia adelante desde el lugar actual
+    fseek(archivo, P, SEEK_CUR);
+    // Moverse P bytes hacia atrás desde el lugar actual
+    fseek(archivo, -P, SEEK_CUR);
+    // Moverse al final del archivo
+    fseek(archivo, 0, SEEK_END);
+    // Escribir
+    fwrite(lo_que_sobreescribo, sizeof(char), bytes_de_lo_que_sobreescribo, archivo);
+    // Escribir un solo char
+    fputc('X', archivo):
+
+    fclose(archivo);
+    return 0;
+}
+```
 
 ---
 
