@@ -857,6 +857,10 @@ Los hilos se usan cuando se pueden ejecutar concurrentemente múltiples tareas, 
 
 ## Ejercicios de Código
 
+[Doc resueltos](https://docs.google.com/document/d/1AvyV601tZKVNuATf2JEO7VyafU0iJQQk4DxBnX_MJ0k/edit?usp=sharing
+)
+[Carpeta resueltos](https://drive.google.com/drive/folders/1dH3v6_EqOJQtOQ2I2Wn5-2lhnv0q_I4Z?usp=drive_link)
+
 ### Sockets
 
 > Escribir un programa que reciba el puerto, escuche una conexión, reciba paquetes terminados en '\0' y envíe el largo del paquete recibido. Si recibe un paquete de menos de 10 caracteres debe finalizar el programa liberando recursos.
@@ -997,6 +1001,26 @@ Los hilos se usan cuando se pueden ejecutar concurrentemente múltiples tareas, 
 > ```cpp
 > std::list<T> DobleSegunda(std::list<T> a, std::list<T> b);
 > ```
+
+```cpp
+#include <list>
+
+template <typename T>
+std::list<T> dobleSegunda(std::list<T> a, std::list<T> b) {
+    std::list<T> respuesta;
+
+    for (const auto &T elem : a) {
+        respuesta.push_back(elem);
+        auto it = std::find(b.begin(), b.end(), elem);
+        if (it != b.end()) {
+            // En este caso, elem está tanto en A como en B. Lo pusheo de nuevo.
+            respuesta.push_back(elem);
+        }
+    }
+
+    return respuesta;
+}
+```
 
 ---
 
