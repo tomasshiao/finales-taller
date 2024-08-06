@@ -1112,6 +1112,10 @@ int int_to_baseN(const char* num) {
         }
     }
 }
+
+// Para pasar de bases entre 2 y 36 a base 10
+long enteroLong = strtol(puntero_a_numero_base_N, NULL, N);
+int enteroInt = (int) enteroLong;
 ```
 
 #### Ejemplo abrir un archivo, buscar posición y escribir
