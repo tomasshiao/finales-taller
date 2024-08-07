@@ -1014,9 +1014,9 @@ public:
     GenericClass& operator-=(const GenericClass& other);
     // ... y otros operadores de asignación compuestos
 
-    // Operadores de desplazamiento a izquierda y derecha
-    GenericClass operator<<(int shift) const;
-    GenericClass operator>>(int shift) const;
+    // Operadores de carga e impresión
+    friend std::ostream& operator<<(std::ostream& os, const GenericClass& class);
+    friend std::istream& operator>>(std::istream& os, const GenericClass& class);
 
     // Operadores de incremento y decremento
     GenericClass& operator++(); // Preincremento
