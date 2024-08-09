@@ -658,13 +658,13 @@ Si fuera el caso que se le introduce padding a la estructura ejemplo, y teniendo
 Salida del programa:
 
 ```sh
-B()
 A()
-~A()
+B()
 ~B()
+~A()
 ```
 
-B es una clase que hereda de A, por lo que cuando se instancia, el constructor primero imprime "B()" y luego se llama al constructor de A, imprimiéndose "A()". Luego, cuando se termina la ejecución, se destruye el objeto instanciado. Al ser B una clase que hereda de A, se llama primero al destructor de A, que imprime "~A()" y luego al destructor de B, que imprime "~B()".
+B es una clase que hereda de A, por lo que cuando se instancia, el constructor primero llama al constructor de A, imprimiendo "A()", y luego se termina de construir B, y se imprime "B()". Luego, cuando se termina la ejecución, se destruye el objeto instanciado. Al ser B una clase que hereda de A, se llama primero al destructor de B, que imprime "~B()" y luego al destructor de la clase base A, que imprime "~A()".
 
 ---
 
