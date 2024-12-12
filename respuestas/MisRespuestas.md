@@ -20,7 +20,7 @@ for (it = numeros.begin(); it != numeros.end(); ++it) {
 
 > ¿Qué es un iterador en STL? Ejemplificar
 
-STL es la Standard Template Library de C++. Un iterador es un objeto usado para recorrer secuencialmente los elementos de tipos contenedores, tales como un `std::vector`, una `std::list` o un `std::map`. Sirven para recorrer estas estructuras y permiten la modificación del elemento contenido, modificando al espacio de memoria apuntado.
+STL es la Standard Template Library de C++. Un iterador es un objeto usado para recoorer secuencialmente los elementos de tipos contenedores, tales como un `std::vector`, una `std::list` o un `std::map`. Sirven para recorrer estas estructuras y permiten la modificación del elemento contenido, modificando al espacio de memoria apuntado.
 
 En STL, los iteradores son usados por varios algoritmos, como por ejemplo, `std::sort`, `std::find` o los métodos `begin()` y `end()` de los contenedores, que devuelven un iterador.
 
@@ -37,7 +37,7 @@ for (auto it = numeros.begin(); it != numeros.end(); it++) {
 
 > ¿Qué significa que una función sea **blocante**? ¿Cómo subsanaría esa limitación en términos de **mantener el programa 'vivo'**?
 
-Una función es bloqueante cuando detiene ejecición del hilo hasta que termine su tarea. Por ejemplo, la función pop de la cola provista por la cátedra es una función bloqueante, ya que espera a poder sacar un elemento de la cola, y si esta está vacía, se queda esperando a que haya algún elemento para poder quitar.
+Una función es bloqueante cuando detiene la ejecución del hilo hasta que termine su tarea. Por ejemplo, la función pop de la cola provista por la cátedra es una función bloqueante, ya que espera a poder sacar un elemento de la cola, y si esta está vacía, se queda esperando a que haya algún elemento para poder quitar.
 
 Para subsanar esta limitación, se pueden lanzar múltiples hilos (multithreading) o procesos (fork).
 
@@ -62,7 +62,7 @@ La palabra `static` en dicho contexto connota que la variable no será una varia
 Declarar un método estático significa que el método pertenece a la clase en sí y no a una instancia, por lo que se puede acceder al método sin necesidad de crear un objeto de la clase.
 
 ```cpp
-clas Printer {
+class Printer {
  public:
     static void printMessage(const std::string& msg) {
         std::cout << msg << std::endl;
@@ -189,7 +189,7 @@ class UnaClase {
 
 El parámetro con el doble ampersand (`&&`) indica que debe utilizarse move semantics al pasar valores usando este constructor.
 
-Si hay un constructor por copia, el compilador no genera un constructor por movimiento por defecto; si no hay un constructor por copia, se generará un constructor move implícitamente que hace una copia miemmbro a miembro, lo que es menos eficiente que uno definido a mano.
+Si hay un constructor por copia, el compilador no genera un constructor por movimiento por defecto; si no hay un constructor por copia, se generará un constructor move implícitamente que hace una copia miembro a miembro, lo que es menos eficiente que uno definido a mano.
 
 ---
 
